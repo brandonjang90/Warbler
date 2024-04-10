@@ -5,7 +5,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, Likes
 import pdb
 
 CURR_USER_KEY = "curr_user"
@@ -35,9 +35,12 @@ def add_user_to_g():
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
+        g.user_likes_ids = [like.id for like in g.user.likes]
 
     else:
         g.user = None
+        g.user_likes_ids = []
+
 
 
 def do_login(user):
@@ -317,20 +320,56 @@ def homepage():
     """
 
     if g.user:
-        followed_users = [user.id for user in g.user.following]
+        followed_users = [user.id for user in g.user.following] + [g.user.id]
         messages = (Message
                     .query
                     .filter(Message.user_id.in_(followed_users))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
-
-        return render_template('home.html', messages=messages)
+        user_likes_ids = [like.id for like in g.user.likes]
+        return render_template('home.html', messages=messages, user_likes_ids=user_likes_ids)
 
     else:
         return render_template('home-anon.html')
 
+##############################################################################
+# Likes Route
 
+@app.route('/users/add_like/<int:message_id>', methods=['POST'])
+def like_post(message_id):
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    message = Message.query.get_or_404(message_id)
+    
+    if message.user_id == g.user.id:
+        flash("Cannot like your own warble.", "danger")
+        return redirect('/')
+    
+    existing_like = Likes.query.filter_by(user_id=g.user.id, message_id=message.id).first()
+
+    if existing_like:
+        db.session.delete(existing_like)
+        db.session.commit()
+    else:
+        new_like = Likes(user_id=g.user.id, message_id=message.id)
+        db.session.add(new_like)
+
+        db.session.commit()
+
+    return redirect('/')
+    
+@app.route('/users/<int:user_id>/likes')
+def show_liked_posts(user_id):
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+    
+    user = User.query.get_or_404(user_id)
+    likes = Likes.query.filter_by(user_id=user_id).all()
+    return render_template('messages/liked.html', user=user, likes=likes)
 ##############################################################################
 # Turn off all caching in Flask
 #   (useful for dev; in production, this kind of stuff is typically

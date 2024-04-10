@@ -48,6 +48,7 @@ class Likes(db.Model):
         unique=True
     )
 
+    message = db.relationship('Message', backref='likes')
 
 class User(db.Model):
     """User in the system."""
@@ -112,8 +113,9 @@ class User(db.Model):
 
     likes = db.relationship(
         'Message',
-        secondary="likes"
-    )
+        secondary='likes',
+        backref='liked_by'    
+        )
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
@@ -198,6 +200,7 @@ class Message(db.Model):
     )
 
     user = db.relationship('User')
+
 
 
 def connect_db(app):

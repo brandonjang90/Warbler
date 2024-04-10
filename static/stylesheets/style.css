@@ -500,12 +500,12 @@ p.card-bio {
 #messages.no-hover .message-heading {
   display: flex;
   justify-content: space-between;
-  height: 47px;
-  margin-top: 3px;
+  align-items: center;
 }
 
 #messages.no-hover .message-heading .btn {
-  min-width: 105px;
+  margin-left: 100px;
+  min-width: 60px;
 }
 
 #messages-form {
@@ -515,6 +515,16 @@ p.card-bio {
   z-index: 1;
 }
 
+#follow{
+  margin-right: 30px;
+}
+
+#like{
+  margin-top: 7px;
+  margin-right: 10px;
+  background-color: transparent;
+  border:none;
+}
 .single-message {
   font-size: 27px;
   line-height: 32px;
@@ -540,4 +550,27 @@ p.card-bio {
 
 .message-404 .form-inline input {
   flex: 1;
+}
+
+/* =========================== Like Button Styling */
+
+.like-button-container {
+  display: inline-block;
+  margin-left: auto;
+}
+
+#messages .list-group-item {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+#messages .list-group-item .message-area {
+  flex-grow: 1;
+}
+
+#messages-form {
+  position: absolute;
+  top: 4px;
+  right: 4px;
 }
