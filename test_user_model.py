@@ -7,7 +7,7 @@
 
 import os
 from unittest import TestCase
-
+from flask_bcrypt import Bcrypt
 from models import db, User, Message, Follows
 
 # BEFORE we import our app, let's set an environmental variable
@@ -56,3 +56,22 @@ class UserModelTestCase(TestCase):
         # User should have no messages & no followers
         self.assertEqual(len(u.messages), 0)
         self.assertEqual(len(u.followers), 0)
+
+    def test_is_followed_by(self):
+        """Does is_followed_by successfully detect when user1 is followed by user2?"""
+
+        u2 = User.signup("testuser2", "test2@test.com", "password", None)
+        u2.id = 99999
+        db.session.add(u2)
+        u2.following.append(self.u)
+        db.session.commit()
+
+        self.assertTrue(self.u.is_followed_by(u2))
+        self.assertFalse(u2.is_followed_by(self.u))
+    
+    def test_authenticate(self):
+        """Does User.authenticate successfully return a user when given a valid username and password?"""
+
+        u = User.authenticate(self.u.username, "password")
+        self.assertIsNotNone(u)
+        self.assertEqual(u.id, self.uid)

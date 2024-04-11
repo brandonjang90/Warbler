@@ -7,7 +7,6 @@
 
 import os
 from unittest import TestCase
-
 from models import db, connect_db, Message, User
 
 # BEFORE we import our app, let's set an environmental variable
@@ -71,3 +70,46 @@ class MessageViewTestCase(TestCase):
 
             msg = Message.query.one()
             self.assertEqual(msg.text, "Hello")
+
+    def test_follow_pages_logged_in(self):
+        """When you're logged in, can you see the follower/following pages for any user?"""
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess['curr_user'] = self.testuser_id
+
+            # Test for following page
+            response = c.get(f"/users/{self.testuser_id}/following")
+            self.assertEqual(response.status_code, 200)
+
+            # Test for followers page
+            response = c.get(f"/users/{self.testuser_id}/followers")
+            self.assertEqual(response.status_code, 200)
+
+
+    def test_add_message_logged_in(self):
+        """When you're logged in, can you add a message as yourself?"""
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess['curr_user'] = self.testuser_id
+
+            response = c.post("/messages/new", data={"text": "Hello"}, follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Hello", response.get_data(as_text=True))
+            
+    def test_delete_message(self):
+        """Test deletion of a message."""
+        m = Message(text="This message will be deleted", user_id=self.uid)
+        db.session.add(m)
+        db.session.commit()
+
+        # Ensure the message is in the database
+        self.assertIsNotNone(Message.query.get(m.id))
+
+        # Delete the message
+        db.session.delete(m)
+        db.session.commit()
+
+        # Ensure the message is no longer in the database
+        self.assertIsNone(Message.query.get(m.id))
