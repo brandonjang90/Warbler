@@ -2,19 +2,21 @@ import os
 from unittest import TestCase
 from datetime import datetime
 from flask_bcrypt import Bcrypt
+from app import app, db
 from models import db, User, Message, Follows, Likes
 
 os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
 
-from app import app
-
-db.create_all()
+bcrypt = Bcrypt()
 
 class MessageModelTestCase(TestCase):
     """Test model for Message."""
 
     def setUp(self):
         """Create test client, add sample data."""
+        self.app_context = app.app_contect()
+        self.app_context.push()
+        
         db.drop_all()
         db.create_all()
 

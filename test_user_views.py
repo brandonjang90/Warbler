@@ -5,6 +5,7 @@ from app import app, CURR_USER_KEY
 
 # Setup test database
 os.environ['_DATABASE_URI'] = 'postgresql:///warbler-test'
+app.app_context().push()
 
 db.create_all()
 

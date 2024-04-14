@@ -21,25 +21,29 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
 # Now we can import app
 
 from app import app
+# app.app_context().push()
 
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data
 # and create fresh new clean test data
-
-db.create_all()
-
+bcrypt = Bcrypt()
 
 class UserModelTestCase(TestCase):
     """Test views for messages."""
 
     def setUp(self):
-        """Create test client, add sample data."""
+        # Initialize app context
+        self.app_context = app.app_context()
+        self.app_context.push()
 
-        User.query.delete()
-        Message.query.delete()
-        Follows.query.delete()
+        # Create all tables in the database
+        db.create_all()
 
-        self.client = app.test_client()
+    def tearDown(self):
+        # Remove the app context after the test
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
 
     def test_user_model(self):
         """Does basic model work?"""
